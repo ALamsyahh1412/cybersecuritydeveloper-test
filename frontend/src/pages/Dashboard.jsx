@@ -283,7 +283,7 @@ function Dashboard() {
 
       <header className="dashboard-header">
         <div>
-          <h1>Cybersecurity Scenario Manager</h1>
+          <h1>CRMS (Cyber Range Management System)</h1>
           <p>Dashboard</p>
         </div>
 
