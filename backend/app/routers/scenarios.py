@@ -1,45 +1,4 @@
-# from fastapi import APIRouter, Depends
-# from sqlalchemy.orm import Session
 
-# from ..auth.dependencies import get_current_user
-# from ..database import get_db
-# from ..models.scenario import Scenario
-# from ..schemas.scenario import ScenarioResponse
-
-
-# router = APIRouter(
-#     prefix="/api/scenarios",
-#     tags=["Scenarios"]
-# )
-
-
-# @router.get(
-#     "",
-#     response_model=list[ScenarioResponse]
-# )
-# def get_scenarios(
-#     db: Session = Depends(get_db),
-#     current_user=Depends(get_current_user)
-# ):
-#     scenarios = db.query(Scenario).all()
-
-#     return scenarios
-
-# update
-
-
-# from fastapi import APIRouter, Depends, HTTPException, status
-# from fastapi import APIRouter, Depends, HTTPException, status
-# from sqlalchemy.orm import Session
-
-# from ..auth.dependencies import get_current_user
-# from ..database import get_db
-# from ..models.scenario import Scenario
-# from ..schemas.scenario import (
-#     ScenarioCreate,
-#     ScenarioUpdate,
-#     ScenarioResponse,
-# )
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
