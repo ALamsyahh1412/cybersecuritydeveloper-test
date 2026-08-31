@@ -143,8 +143,7 @@ import {
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Scenarios from "./pages/Scenarios";
-// import CreateScenario from "./pages/CreateScenario";
-// import ScenarioForm from "./components/ScenarioForm";
+import Report from "./pages/Report";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -180,14 +179,15 @@ function App() {
           }
         />
 
-        {/* <Route
-          path="/scenarios/create"
+        <Route
+          path="/reports"
           element={
             <ProtectedRoute>
-              <CreateScenario />
+              <Report />
             </ProtectedRoute>
           }
-        /> */}
+        />
+
       </Routes>
     </BrowserRouter>
   );

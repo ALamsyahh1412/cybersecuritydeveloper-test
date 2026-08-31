@@ -20,7 +20,9 @@ class DifficultyStatResponse(BaseModel):
 
 class ReportResponse(BaseModel):
     category: str
-    easy: int
-    medium: int
-    hard: int
+    total: int
     expert: int
+    advanced: int
+    intermediate: int
+    beginner: int
+    published: int

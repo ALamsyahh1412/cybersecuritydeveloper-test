@@ -2,7 +2,7 @@ from datetime import date
 import csv
 import io
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -115,72 +115,113 @@ def get_by_difficulty(
     ]
 
 
+def build_report(
+    db: Session,
+    date_from: date | None = None,
+    date_to: date | None = None
+):
+    query = db.query(
+        Scenario.category,
+        Scenario.difficulty,
+        Scenario.status,
+        func.count(Scenario.id).label("count")
+    )
+
+    if date_from:
+        query = query.filter(
+            Scenario.arranged_date >= date_from
+        )
+
+    if date_to:
+        query = query.filter(
+            Scenario.arranged_date <= date_to
+        )
+
+    results = query.group_by(
+        Scenario.category,
+        Scenario.difficulty,
+        Scenario.status
+    ).all()
+
+    report = {}
+
+    for category, difficulty, status, count in results:
+        if category not in report:
+            report[category] = {
+                "category": category,
+                "total": 0,
+                "expert": 0,
+                "advanced": 0,
+                "intermediate": 0,
+                "beginner": 0,
+                "published": 0,
+            }
+
+        report[category]["total"] += count
+
+        difficulty_key = difficulty.lower()
+
+        if difficulty_key in report[category]:
+            report[category][difficulty_key] += count
+
+        if status == "Released":
+            report[category]["published"] += count
+
+    return list(
+        sorted(
+            report.values(),
+            key=lambda item: item["category"]
+        )
+    )
+
+
 @router.get(
     "/report",
     response_model=list[ReportResponse]
 )
 def get_report(
+    date_from: date | None = Query(
+        default=None,
+        description="Tanggal awal berdasarkan arranged_date"
+    ),
+    date_to: date | None = Query(
+        default=None,
+        description="Tanggal akhir berdasarkan arranged_date"
+    ),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    results = db.query(
-        Scenario.category,
-        Scenario.difficulty,
-        func.count(Scenario.id).label("count")
-    ).group_by(
-        Scenario.category,
-        Scenario.difficulty
-    ).all()
+    if date_from and date_to and date_from > date_to:
+        return []
 
-    report = {}
+    return build_report(
+        db=db,
+        date_from=date_from,
+        date_to=date_to
+    )
 
-    for category, difficulty, count in results:
-        if category not in report:
-            report[category] = {
-                "category": category,
-                "easy": 0,
-                "medium": 0,
-                "hard": 0,
-                "expert": 0,
-            }
-
-        difficulty_key = difficulty.lower()
-
-        if difficulty_key in report[category]:
-            report[category][difficulty_key] = count
-
-    return list(report.values())
 
 @router.get("/report/csv")
 def export_report_csv(
+    date_from: date | None = Query(
+        default=None,
+        description="Tanggal awal berdasarkan arranged_date"
+    ),
+    date_to: date | None = Query(
+        default=None,
+        description="Tanggal akhir berdasarkan arranged_date"
+    ),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    results = db.query(
-        Scenario.category,
-        Scenario.difficulty,
-        func.count(Scenario.id).label("count")
-    ).group_by(
-        Scenario.category,
-        Scenario.difficulty
-    ).all()
-
-    report = {}
-
-    for category, difficulty, count in results:
-        if category not in report:
-            report[category] = {
-                "category": category,
-                "easy": 0,
-                "medium": 0,
-                "hard": 0,
-                "expert": 0,
-            }
-
-        difficulty_key = difficulty.lower()
-
-        if difficulty_key in report[category]:
-            report[category][difficulty_key] = count
+    if date_from and date_to and date_from > date_to:
+        report = []
+    else:
+        report = build_report(
+            db=db,
+            date_from=date_from,
+            date_to=date_to
+        )
 
     output = io.StringIO()
 
@@ -188,16 +229,18 @@ def export_report_csv(
         output,
         fieldnames=[
             "category",
-            "easy",
-            "medium",
-            "hard",
-            "expert"
+            "total",
+            "expert",
+            "advanced",
+            "intermediate",
+            "beginner",
+            "published",
         ]
     )
 
     writer.writeheader()
 
-    for row in report.values():
+    for row in report:
         writer.writerow(row)
 
     output.seek(0)

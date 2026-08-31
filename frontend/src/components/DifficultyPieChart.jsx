@@ -7,9 +7,26 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
+const DIFFICULTY_ORDER = [
+  "Beginner",
+  "Intermediate",
+  "Advanced",
+  "Expert",
+];
+
+const COLORS = [
+  "#22c55e",
+  "#3b82f6",
+  "#f59e0b",
+  "#8b5cf6",
+];
+
 function DifficultyPieChart() {
+  const navigate = useNavigate();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,10 +45,20 @@ function DifficultyPieChart() {
           return;
         }
 
-        const formattedData = response.data.map((item) => ({
-          name: item.difficulty,
-          value: item.count,
-        }));
+        const stats = response.data || [];
+
+        const formattedData = DIFFICULTY_ORDER.map(
+          (difficulty) => {
+            const item = stats.find(
+              (stat) => stat.difficulty === difficulty
+            );
+
+            return {
+              name: difficulty,
+              value: item?.count || 0,
+            };
+          }
+        );
 
         setData(formattedData);
       } catch (error) {
@@ -43,11 +70,13 @@ function DifficultyPieChart() {
 
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
-          window.location.assign("/login");
+          navigate("/login", { replace: true });
           return;
         }
 
-        setError("Gagal mengambil statistik difficulty.");
+        setError(
+          "Gagal mengambil statistik difficulty."
+        );
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -60,21 +89,17 @@ function DifficultyPieChart() {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  const COLORS = [
-    "#22c55e",
-    "#3b82f6",
-    "#f59e0b",
-    "#ef4444",
-  ];
+  }, [navigate]);
 
   return (
     <section className="chart-section">
       <div className="section-header">
         <div>
           <h2>Scenario Difficulty</h2>
-          <p>Distribusi scenario berdasarkan tingkat kesulitan.</p>
+
+          <p>
+            Distribusi scenario berdasarkan tingkat kesulitan.
+          </p>
         </div>
       </div>
 
@@ -86,12 +111,6 @@ function DifficultyPieChart() {
         <p className="error-message">
           {error}
         </p>
-      )}
-
-      {!loading && !error && data.length === 0 && (
-        <div className="empty-state">
-          Belum ada data difficulty.
-        </div>
       )}
 
       {!loading && !error && data.length > 0 && (
@@ -116,7 +135,9 @@ function DifficultyPieChart() {
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${entry.name}`}
-                    fill={COLORS[index % COLORS.length]}
+                    fill={
+                      COLORS[index % COLORS.length]
+                    }
                   />
                 ))}
               </Pie>
@@ -126,6 +147,14 @@ function DifficultyPieChart() {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {!loading && !error && data.every(
+        (item) => item.value === 0
+      ) && (
+        <div className="empty-state">
+          Belum ada data difficulty.
         </div>
       )}
     </section>
