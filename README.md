@@ -85,7 +85,7 @@ git --version
 ### 1. Clone Repository
 
 ```powershell
-git clone https://github.com/ALamsyahh1412/cybersecuritydeveloper-test.git
+git clone https://github.com/ALamsyahh1412/CyberSecurityDev_test.git
 cd cybersecurity-dev-test
 ```
 
