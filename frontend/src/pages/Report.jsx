@@ -167,7 +167,7 @@ function Report() {
         <div>
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
           >
             Dashboard
           </button>
